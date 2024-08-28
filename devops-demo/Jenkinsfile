@@ -1,5 +1,20 @@
 pipeline {
-    agent any
+    agent {
+        kubernetes {
+            label 'maven-agent'
+            yaml """
+            apiVersion: v1
+            kind: Pod
+            spec:
+              containers:
+              - name: maven
+                image: maven:3.8.1-openjdk-11
+                command:
+                - cat
+                tty: true
+            """
+        }
+    }
 
     stages {
         stage('Build') {
