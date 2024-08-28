@@ -1,0 +1,31 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Build') {
+            echo 'Building the application...'
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+        stage('Test') {
+            echo 'Testing the application...'
+            steps {
+                sh 'mvn test'
+            }
+        }
+        stage('Build Docker Image') {
+            echo 'Building the Docker image...'
+            steps {
+                sh 'docker build -t yourusername/devops-demo:latest .'
+            }
+        }
+        stage('Deploy to Kubernetes') {
+            echo 'Deploying the application to Kubernetes...'
+            steps {
+                sh 'kubectl apply -f k8s/deployment.yaml'
+                sh 'kubectl apply -f k8s/service.yaml'
+            }
+        }
+    }
+}
