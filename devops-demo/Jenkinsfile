@@ -23,7 +23,9 @@ pipeline {
             steps {
                 container('maven') {
                     echo 'Building the application...'
-                    sh 'mvn clean package'
+                    dir('devops-demo') {
+                        sh 'mvn clean package'
+                    }
                 }
             }
         }
@@ -31,21 +33,27 @@ pipeline {
             steps {
                 container('maven') {
                     echo 'Testing the application...'
-                    sh 'mvn test'
+                    dir('devops-demo') {
+                        sh 'mvn test'
+                    }
                 }
             }
         }
         stage('Build Docker Image') {
             steps {
                 echo 'Building the Docker image...'
-                sh 'docker build -t yourusername/devops-demo:latest .'
+                dir('devops-demo') {
+                    sh 'docker build -t yourusername/devops-demo:latest .'
+                }
             }
         }
         stage('Deploy to Kubernetes') {
             steps {
                 echo 'Deploying to Kubernetes...'
-                sh 'kubectl apply -f k8s/deployment.yaml'
-                sh 'kubectl apply -f k8s/service.yaml'
+                dir('devops-demo') {
+                    sh 'kubectl apply -f k8s/deployment.yaml'
+                    sh 'kubectl apply -f k8s/service.yaml'
+                }
             }
         }
     }
