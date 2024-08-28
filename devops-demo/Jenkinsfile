@@ -12,6 +12,10 @@ pipeline {
                 command:
                 - cat
                 tty: true
+              - name: jnlp
+                image: jenkins/inbound-agent:3261.v9c670a_4748a_9-1
+                args:
+                - ${computer.jnlpmac} ${computer.name}
             """
         }
     }
@@ -19,14 +23,18 @@ pipeline {
     stages {
         stage('Build') {
             steps {
-                echo 'Building the application...'
-                sh 'mvn clean package'
+                container('maven') {
+                    echo 'Building the application...'
+                    sh 'mvn clean package'
+                }
             }
         }
         stage('Test') {
             steps {
-                echo 'Testing the application...'
-                sh 'mvn test'
+                container('maven') {
+                    echo 'Testing the application...'
+                    sh 'mvn test'
+                }
             }
         }
         stage('Build Docker Image') {
