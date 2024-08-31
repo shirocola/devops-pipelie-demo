@@ -41,8 +41,8 @@ jobs:
       - name: Deploy to Minikube (Dev)
         if: github.ref == 'refs/heads/dev'
         run: |
-          kubectl apply -f infra/local/deployment.yaml
-          kubectl apply -f infra/local/service.yaml
+          kubectl apply -f infra/local/deployment.yaml --validate=false
+          kubectl apply -f infra/local/service.yaml --validate=false
 
       # Build and push Docker image for staging
       # - name: Build and push Docker image for staging
