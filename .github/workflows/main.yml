@@ -26,6 +26,10 @@ jobs:
       #     echo ${{ secrets.GCR_CREDENTIALS }} | gcloud auth activate-service-account --key-file=-
       #     gcloud auth configure-docker
 
+      - name: Start Docker Registry
+        run: |
+          docker run -d -p 5000:5000 --restart=always --name registry registry:2 || true
+
       # Build and push Docker image for dev
       - name: Build and push Docker image for dev
         if: github.ref == 'refs/heads/dev'

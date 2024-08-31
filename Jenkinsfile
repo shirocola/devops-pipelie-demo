@@ -7,6 +7,11 @@ pipeline {
         SONAR_LOGIN = credentials('sonar-token')
     }
     stages {
+        stage('Start Docker Registry') {
+            steps {
+                sh 'docker run -d -p 5000:5000 --restart=always --name registry registry:2 || true'
+            }
+        }
         stage('Pre-Build Check') {
             steps {
                 sh 'sh scripts/pre-build-check.sh'
