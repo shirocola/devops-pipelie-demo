@@ -1,11 +1,11 @@
 pipeline {
     agent any
-    environment {
-        // GCR_CREDENTIALS = credentials('gcr-json-key') // Not used for local builds
-        // PROJECT_ID = 'your-gcp-project-id' // Not used for local builds
-        // SONAR_HOST_URL = 'http://your-sonarqube-server-url'
-        // SONAR_LOGIN = credentials('sonar-token')
-    }
+    // environment {
+    //     // GCR_CREDENTIALS = credentials('gcr-json-key') // Not used for local builds
+    //     // PROJECT_ID = 'your-gcp-project-id' // Not used for local builds
+    //     // SONAR_HOST_URL = 'http://your-sonarqube-server-url'
+    //     // SONAR_LOGIN = credentials('sonar-token')
+    // }
     stages {
         stage('Start Docker Registry') {
             steps {
