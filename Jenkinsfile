@@ -7,6 +7,22 @@ pipeline {
     //     SONAR_LOGIN = credentials('sonar-token')
     // }
     stages {
+        stage('Install Docker') {
+            steps {
+                sh '''
+                # Install Docker if not already installed
+                if ! [ -x "$(command -v docker)" ]; then
+                  echo "Docker not found, installing..."
+                  apt-get update
+                  apt-get install -y docker.io
+                  systemctl start docker
+                  systemctl enable docker
+                else
+                  echo "Docker is already installed."
+                fi
+                '''
+            }
+        }
         stage('Start Docker Registry') {
             steps {
                 sh 'docker run -d -p 5000:5000 --restart=always --name registry registry:2 || true'
