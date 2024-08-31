@@ -20,6 +20,9 @@
 
     <properties>
         <java.version>11</java.version>
+        <sonar.host.url>http://your-sonarqube-server-url</sonar.host.url>
+        <sonar.projectKey>devops-demo</sonar.projectKey>
+        <sonar.login>${sonar.login}</sonar.login>
     </properties>
 
     <dependencies>
@@ -53,6 +56,11 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.sonarsource.scanner.maven</groupId>
+                <artifactId>sonar-maven-plugin</artifactId>
+                <version>4.0.0.2929</version>
             </plugin>
         </plugins>
     </build>

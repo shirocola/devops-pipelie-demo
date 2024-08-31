@@ -3,6 +3,8 @@ pipeline {
     environment {
         GCR_CREDENTIALS = credentials('gcr-json-key')
         PROJECT_ID = 'your-gcp-project-id'
+        SONAR_HOST_URL = 'http://your-sonarqube-server-url'
+        SONAR_LOGIN = credentials('sonar-token') // Store your token in Jenkins credentials
     }
     stages {
         stage('Build') {
@@ -18,6 +20,14 @@ pipeline {
                 container('maven') {
                     echo 'Running tests...'
                     sh 'mvn test'
+                }
+            }
+        }
+        stage('SonarQube Analysis') {
+            steps {
+                container('maven') {
+                    echo 'Running SonarQube analysis...'
+                    sh 'mvn sonar:sonar -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=$SONAR_LOGIN'
                 }
             }
         }
