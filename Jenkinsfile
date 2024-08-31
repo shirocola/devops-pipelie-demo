@@ -3,8 +3,8 @@ pipeline {
     environment {
         // GCR_CREDENTIALS = credentials('gcr-json-key') // Not used for local builds
         // PROJECT_ID = 'your-gcp-project-id' // Not used for local builds
-        SONAR_HOST_URL = 'http://your-sonarqube-server-url'
-        SONAR_LOGIN = credentials('sonar-token')
+        // SONAR_HOST_URL = 'http://your-sonarqube-server-url'
+        // SONAR_LOGIN = credentials('sonar-token')
     }
     stages {
         stage('Start Docker Registry') {
@@ -37,7 +37,7 @@ pipeline {
             steps {
                 container('maven') {
                     echo 'Running SonarQube analysis...'
-                    sh 'mvn sonar:sonar -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=$SONAR_LOGIN'
+                    // sh 'mvn sonar:sonar -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=$SONAR_LOGIN'
                 }
             }
         }
