@@ -9,8 +9,7 @@ pipeline {
     stages {
         stage('Pre-Build Check') {
             steps {
-                echo 'Checking dependencies and environment...'
-                // Add any pre-build checks here
+                sh 'sh scripts/pre-build-check.sh'
             }
         }
         stage('Build') {
@@ -44,8 +43,7 @@ pipeline {
         }
         stage('Checkmarx Scan') {
             steps {
-                echo 'Running Checkmarx scan...'
-                // Add Checkmarx scan command here
+                sh 'sh scripts/checkmarx-scan.sh'
             }
         }
         stage('Build Docker Image') {
@@ -109,8 +107,7 @@ pipeline {
         }
         stage('Post-Deployment Validation') {
             steps {
-                echo 'Validating deployment...'
-                // Add validation commands here
+               sh 'sh scripts/post-deployment-validation.sh'
             }
         }
     }
