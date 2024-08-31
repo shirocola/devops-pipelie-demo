@@ -18,13 +18,6 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
-    <properties>
-        <java.version>11</java.version>
-        <sonar.host.url>http://your-sonarqube-server-url</sonar.host.url>
-        <sonar.projectKey>devops-demo</sonar.projectKey>
-        <sonar.login>${sonar.login}</sonar.login>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
