@@ -1,8 +1,8 @@
 pipeline {
     agent any
     environment {
-        // GCR_CREDENTIALS = credentials('gcr-json-key')
-        // PROJECT_ID = 'your-gcp-project-id'
+        // GCR_CREDENTIALS = credentials('gcr-json-key') // Not used for local builds
+        // PROJECT_ID = 'your-gcp-project-id' // Not used for local builds
         SONAR_HOST_URL = 'http://your-sonarqube-server-url'
         SONAR_LOGIN = credentials('sonar-token')
     }
@@ -55,8 +55,8 @@ pipeline {
         //     steps {
         //         dir('devops-demo') {
         //             echo 'Building the Docker image...'
-        //             sh 'docker build -t gcr.io/$PROJECT_ID/devops-demo:dev-${env.BUILD_ID} .'
-        //             sh 'docker push gcr.io/$PROJECT_ID/devops-demo:dev-${env.BUILD_ID}'
+        //             sh 'docker build -t gcr.io/$PROJECT_ID/devops-demo:dev-${env.BUILD_ID} .' // Not used for local builds
+        //             sh 'docker push gcr.io/$PROJECT_ID/devops-demo:dev-${env.BUILD_ID}' // Not used for local builds
         //         }
         //     }
         // }
@@ -65,7 +65,7 @@ pipeline {
             steps {
                 dir('devops-demo') {
                     echo 'Building the Docker image for local...'
-                    sh 'docker build -t 127.0.0.1:5000/devops-demo:dev-latest .'
+                    sh 'docker build -t 127.0.0.1:5000/devops-demo:dev-latest .' // Build and push image to local registry
                     sh 'docker push 127.0.0.1:5000/devops-demo:dev-latest'
                 }
             }
@@ -79,21 +79,40 @@ pipeline {
                 }
             }
         }
+        
+        stage('Port Forwarding Jenkins') { // Added to allow Jenkins access
+            steps {
+                script {
+                    sh 'kubectl port-forward svc/jenkins 8080:8080 &' // Port forwarding for Jenkins
+                }
+            }
+        }
+        stage('Port Forwarding Grafana') { // Added to allow Grafana access
+            steps {
+                script {
+                    sh 'kubectl port-forward svc/grafana 3000:3000 &' // Port forwarding for Grafana
+                }
+            }
+        }
+        stage('Port Forwarding Prometheus') { // Added to allow Prometheus access
+            steps {
+                script {
+                    sh 'kubectl port-forward svc/prometheus 9090:9090 &' // Port forwarding for Prometheus
+                }
+            }
+        }
 
-        // stage('Retag and Push Docker Image') {
+        // stage('Retag and Push Docker Image') { // Not used for local builds
         //     steps {
         //         script {
-        //             // Retag and push for Staging
-        //             sh 'docker tag gcr.io/$PROJECT_ID/devops-demo:dev-${env.BUILD_ID} gcr.io/$PROJECT_ID/devops-demo:staging-${env.BUILD_ID}'
+        //             sh 'docker tag gcr.io/$PROJECT_ID/devops-demo:dev-${env.BUILD_ID} gcr.io/$PROJECT_ID/devops-demo:staging-${env.BUILD_ID}' 
         //             sh 'docker push gcr.io/$PROJECT_ID/devops-demo:staging-${env.BUILD_ID}'
-
-        //             // Retag and push for Prod
         //             sh 'docker tag gcr.io/$PROJECT_ID/devops-demo:dev-${env.BUILD_ID} gcr.io/$PROJECT_ID/devops-demo:prod-${env.BUILD_ID}'
         //             sh 'docker push gcr.io/$PROJECT_ID/devops-demo:prod-${env.BUILD_ID}'
         //         }
         //     }
         // }
-        // stage('Deploy to Kubernetes') {
+        // stage('Deploy to Kubernetes') { // Not used for local builds
         //     parallel {
         //         stage('Deploy to Dev') {
         //             steps {
@@ -127,9 +146,9 @@ pipeline {
         //                 }
         //             }
         //         }
-
         //     }
         // }
+
         stage('Post-Deployment Validation') {
             steps {
                sh 'sh scripts/post-deployment-validation.sh'
@@ -139,9 +158,10 @@ pipeline {
     post {
         always {
             echo 'Cleaning up...'
-            sh 'docker rmi gcr.io/$PROJECT_ID/devops-demo:dev-${env.BUILD_ID}'
-            sh 'docker rmi gcr.io/$PROJECT_ID/devops-demo:staging-${env.BUILD_ID}'
-            sh 'docker rmi gcr.io/$PROJECT_ID/devops-demo:prod-${env.BUILD_ID}'
+            // Uncomment below if using GCR in actual deployments
+            // sh 'docker rmi gcr.io/$PROJECT_ID/devops-demo:dev-${env.BUILD_ID}' 
+            // sh 'docker rmi gcr.io/$PROJECT_ID/devops-demo:staging-${env.BUILD_ID}'
+            // sh 'docker rmi gcr.io/$PROJECT_ID/devops-demo:prod-${env.BUILD_ID}'
         }
     }
 }
