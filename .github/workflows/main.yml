@@ -1,65 +1,65 @@
-name: CI/CD Pipeline
+# name: CI/CD Pipeline
 
-on:
-  push:
-    branches:
-      - dev
-      - staging
-      - prod
+# on:
+#   push:
+#     branches:
+#       - dev
+#       - staging
+#       - prod
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+# jobs:
+#   build:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v2
 
-      # GCP-related steps are commented out for local testing
-      # - name: Set up Google Cloud SDK
-      #   uses: google-github-actions/setup-gcloud@v0.9.0
-      #   with:
-      #     service_account_key: ${{ secrets.GCR_CREDENTIALS }}
-      #     export_default_credentials: true
+#       # GCP-related steps are commented out for local testing
+#       # - name: Set up Google Cloud SDK
+#       #   uses: google-github-actions/setup-gcloud@v0.9.0
+#       #   with:
+#       #     service_account_key: ${{ secrets.GCR_CREDENTIALS }}
+#       #     export_default_credentials: true
 
-      # - name: Authenticate Docker with GCR
-      #   run: |
-      #     echo ${{ secrets.GCR_CREDENTIALS }} | gcloud auth activate-service-account --key-file=-
-      #     gcloud auth configure-docker
+#       # - name: Authenticate Docker with GCR
+#       #   run: |
+#       #     echo ${{ secrets.GCR_CREDENTIALS }} | gcloud auth activate-service-account --key-file=-
+#       #     gcloud auth configure-docker
 
-      - name: Start Docker Registry
-        run: |
-          docker run -d -p 5000:5000 --restart=always --name registry registry:2 || true
+#       - name: Start Docker Registry
+#         run: |
+#           docker run -d -p 5000:5000 --restart=always --name registry registry:2 || true
 
-      # Build and push Docker image for dev
-      - name: Build and push Docker image for dev
-        if: github.ref == 'refs/heads/dev'
-        run: |
-          docker build -t 127.0.0.1:5000/devops-demo:dev-${{ github.run_id }} .
-          docker push 127.0.0.1:5000/devops-demo:dev-${{ github.run_id }}
+#       # Build and push Docker image for dev
+#       - name: Build and push Docker image for dev
+#         if: github.ref == 'refs/heads/dev'
+#         run: |
+#           docker build -t 127.0.0.1:5000/devops-demo:dev-${{ github.run_id }} .
+#           docker push 127.0.0.1:5000/devops-demo:dev-${{ github.run_id }}
 
-      # Deploy to Kubernetes (Dev)
-      - name: Deploy to Minikube (Dev)
-        if: github.ref == 'refs/heads/dev'
-        run: |
-          kubectl apply -f infra/local/deployment.yaml --validate=false
-          kubectl apply -f infra/local/service.yaml --validate=false
+#       # Deploy to Kubernetes (Dev)
+#       - name: Deploy to Minikube (Dev)
+#         if: github.ref == 'refs/heads/dev'
+#         run: |
+#           kubectl apply -f infra/local/deployment.yaml --validate=false
+#           kubectl apply -f infra/local/service.yaml --validate=false
 
-      # Build and push Docker image for staging
-      # - name: Build and push Docker image for staging
-      #   if: github.ref == 'refs/heads/staging'
-      #   run: |
-      #     docker build -t gcr.io/$PROJECT_ID/devops-demo:staging-${{ github.run_id }} .
-      #     docker push gcr.io/$PROJECT_ID/devops-demo:staging-${{ github.run_id }}
+#       # Build and push Docker image for staging
+#       # - name: Build and push Docker image for staging
+#       #   if: github.ref == 'refs/heads/staging'
+#       #   run: |
+#       #     docker build -t gcr.io/$PROJECT_ID/devops-demo:staging-${{ github.run_id }} .
+#       #     docker push gcr.io/$PROJECT_ID/devops-demo:staging-${{ github.run_id }}
 
-      # Deploy to Kubernetes (Staging)
-      # - name: Deploy to Kubernetes (Staging)
-      #   if: github.ref == 'refs/heads/staging'
-      #   run: |
-      #     kubectl apply -f k8s/staging/deployment.yaml
-      #     kubectl apply -f k8s/staging/service.yaml
+#       # Deploy to Kubernetes (Staging)
+#       # - name: Deploy to Kubernetes (Staging)
+#       #   if: github.ref == 'refs/heads/staging'
+#       #   run: |
+#       #     kubectl apply -f k8s/staging/deployment.yaml
+#       #     kubectl apply -f k8s/staging/service.yaml
 
-      # Clean up Docker images
-      - name: Clean up Docker images
-        run: |
-          docker rmi 127.0.0.1:5000/devops-demo:dev-${{ github.run_id }}
-          # docker rmi gcr.io/$PROJECT_ID/devops-demo:staging-${{ github.run_id }}
+#       # Clean up Docker images
+#       - name: Clean up Docker images
+#         run: |
+#           docker rmi 127.0.0.1:5000/devops-demo:dev-${{ github.run_id }}
+#           # docker rmi gcr.io/$PROJECT_ID/devops-demo:staging-${{ github.run_id }}

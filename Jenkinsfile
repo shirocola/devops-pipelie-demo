@@ -1,5 +1,12 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'maven:3.6.3-openjdk-11'
+            args '-v /root/.m2:/root/.m2'
+        }
+    }
+
+    // agent any
     // environment { // Commented out since no variables are used
     //     GCR_CREDENTIALS = credentials('gcr-json-key') // Not used for local builds
     //     PROJECT_ID = 'your-gcp-project-id' // Not used for local builds
