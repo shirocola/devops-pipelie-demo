@@ -16,6 +16,6 @@ spec:
     spec:
       containers:
       - name: devops-demo
-        image: gcr.io/your-gcp-project-id/devops-demo:dev-latest
+        image: localhost:5000/devops-demo:dev-latest
         ports:
         - containerPort: 8080
