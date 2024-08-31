@@ -1,21 +1,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: devops-demo
+  name: devops-demo-dev
   labels:
     app: devops-demo
+    environment: dev
 spec:
   replicas: 2
   selector:
     matchLabels:
       app: devops-demo
+      environment: dev
   template:
     metadata:
       labels:
         app: devops-demo
+        environment: dev
     spec:
       containers:
       - name: devops-demo
-        image: shirocola/devops-demo:latest
+        image: gcr.io/$PROJECT_ID/devops-demo:dev-${env.BUILD_ID}
         ports:
         - containerPort: 8080
