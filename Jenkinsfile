@@ -1,127 +1,59 @@
 pipeline {
-    agent none
-
+    agent any
+    environment {
+        GCR_CREDENTIALS = credentials('gcr-json-key')
+    }
     stages {
         stage('Build') {
-            agent {
-                kubernetes {
-                    label 'maven-agent'
-                    yaml """
-                    apiVersion: v1
-                    kind: Pod
-                    spec:
-                      containers:
-                      - name: maven
-                        image: maven:3.8.1-openjdk-11
-                        command:
-                        - cat
-                        tty: true
-                    """
-                }
-            }
             steps {
                 container('maven') {
-                    dir('devops-demo') {
-                        sh 'mvn clean package'
-                    }
+                    echo 'Building the application...'
+                    sh 'mvn clean package'
                 }
             }
         }
         stage('Test') {
-            agent {
-                kubernetes {
-                    label 'maven-agent'
-                    yaml """
-                    apiVersion: v1
-                    kind: Pod
-                    spec:
-                      containers:
-                      - name: maven
-                        image: maven:3.8.1-openjdk-11
-                        command:
-                        - cat
-                        tty: true
-                    """
-                }
-            }
             steps {
                 container('maven') {
-                    dir('devops-demo') {
-                        sh 'mvn test'
-                    }
+                    echo 'Running tests...'
+                    sh 'mvn test'
                 }
             }
         }
+        stage('Trivy Scan') {
+            steps {
+                sh 'sh scripts/trivy-scan.sh'
+            }
+        }
         stage('Build Docker Image') {
-            agent {
-                kubernetes {
-                    label 'kaniko-agent'
-                    yaml """
-                    apiVersion: v1
-                    kind: Pod
-                    spec:
-                      containers:
-                      - name: kaniko
-                        image: gcr.io/kaniko-project/executor:latest
-                        command:
-                        - /busybox/cat
-                        tty: true
-                        volumeMounts:
-                        - name: gcr-secret
-                          mountPath: /secret
-                        args:
-                        - --dockerfile=Dockerfile
-                        - --context=dir://devops-demo
-                        - --destination=gcr.io/YOUR_PROJECT_ID/devops-demo:latest
-                        - --cleanup
-                    volumes:
-                    - name: gcr-secret
-                      secret:
-                        secretName: gcr-json-key
-                    """
+            steps {
+                dir('devops-demo') {
+                    echo 'Building the Docker image...'
+                    sh 'docker build -t gcr.io/$PROJECT_ID/devops-demo:${env.BUILD_ID} .'
                 }
             }
+        }
+        stage('Push to GCR') {
             steps {
-                container('kaniko') {
-                    dir('devops-demo') {
-                        sh '/kaniko/executor --context=dir://devops-demo --dockerfile=Dockerfile --destination=gcr.io/YOUR_PROJECT_ID/devops-demo:latest --cleanup'
-                    }
+                withCredentials([file(credentialsId: 'gcr-json-key', variable: 'GCR_KEY')]) {
+                    sh 'docker login -u _json_key --password-stdin https://gcr.io < $GCR_KEY'
+                    sh 'docker push gcr.io/$PROJECT_ID/devops-demo:${env.BUILD_ID}'
                 }
             }
         }
         stage('Deploy to Kubernetes') {
-            agent {
-                kubernetes {
-                    label 'kubectl-agent'
-                    yaml """
-                    apiVersion: v1
-                    kind: Pod
-                    spec:
-                      containers:
-                      - name: kubectl
-                        image: bitnami/kubectl:1.20
-                        command:
-                        - cat
-                        tty: true
-                        volumeMounts:
-                        - name: gcr-secret
-                          mountPath: /secret
-                    volumes:
-                    - name: gcr-secret
-                      secret:
-                        secretName: gcr-json-key
-                    """
-                }
-            }
             steps {
-                container('kubectl') {
-                    dir('devops-demo') {
-                        sh 'kubectl set image deployment/your-deployment-name your-container-name=gcr.io/YOUR_PROJECT_ID/devops-demo:latest'
-                        sh 'kubectl apply -f k8s/deployment.yaml'
-                        sh 'kubectl apply -f k8s/service.yaml'
-                    }
+                dir('k8s/prod') {
+                    sh 'kubectl apply -f deployment.yaml'
+                    sh 'kubectl apply -f service.yaml'
                 }
             }
+        }
+    }
+    post {
+        always {
+            echo 'Cleaning up...'
+            sh 'docker rmi gcr.io/$PROJECT_ID/devops-demo:${env.BUILD_ID}'
         }
     }
 }
