@@ -3,6 +3,8 @@ pipeline {
     environment {
         GCR_CREDENTIALS = credentials('gcr-json-key')
         PROJECT_ID = 'your-gcp-project-id'
+        SONAR_HOST_URL = 'http://your-sonarqube-server-url'
+        SONAR_LOGIN = credentials('sonar-token')
     }
     stages {
         stage('Build') {
@@ -18,6 +20,14 @@ pipeline {
                 container('maven') {
                     echo 'Running tests...'
                     sh 'mvn test'
+                }
+            }
+        }
+        stage('SonarQube Analysis') {
+            steps {
+                container('maven') {
+                    echo 'Running SonarQube analysis...'
+                    sh 'mvn sonar:sonar -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=$SONAR_LOGIN'
                 }
             }
         }
@@ -46,23 +56,40 @@ pipeline {
                         }
                     }
                 }
+                stage('Build for Prod') {
+                    steps {
+                        dir('devops-demo') {
+                            echo 'Building the Docker image for Prod...'
+                            sh 'docker build -t gcr.io/$PROJECT_ID/devops-demo:prod-${env.BUILD_ID} .'
+                            sh 'docker push gcr.io/$PROJECT_ID/devops-demo:prod-${env.BUILD_ID}'
+                        }
+                    }
+                }
             }
         }
         stage('Deploy to Kubernetes') {
             parallel {
                 stage('Deploy to Dev') {
                     steps {
-                        dir('k8s/dev') {
-                            sh 'kubectl apply -f deployment.yaml'
-                            sh 'kubectl apply -f service.yaml'
+                        dir('helm/dev') {
+                            echo 'Deploying to Dev environment using Helm...'
+                            sh 'helm upgrade --install devops-demo-dev ./devops-demo -f values-dev.yaml'
                         }
                     }
                 }
                 stage('Deploy to Staging') {
                     steps {
-                        dir('k8s/staging') {
-                            sh 'kubectl apply -f deployment.yaml'
-                            sh 'kubectl apply -f service.yaml'
+                        dir('helm/staging') {
+                            echo 'Deploying to Staging environment using Helm...'
+                            sh 'helm upgrade --install devops-demo-staging ./devops-demo -f values-staging.yaml'
+                        }
+                    }
+                }
+                stage('Deploy to Prod') {
+                    steps {
+                        dir('helm/prod') {
+                            echo 'Deploying to Prod environment using Helm...'
+                            sh 'helm upgrade --install devops-demo-prod ./devops-demo -f values-prod.yaml'
                         }
                     }
                 }
@@ -74,6 +101,7 @@ pipeline {
             echo 'Cleaning up...'
             sh 'docker rmi gcr.io/$PROJECT_ID/devops-demo:dev-${env.BUILD_ID}'
             sh 'docker rmi gcr.io/$PROJECT_ID/devops-demo:staging-${env.BUILD_ID}'
+            sh 'docker rmi gcr.io/$PROJECT_ID/devops-demo:prod-${env.BUILD_ID}'
         }
     }
 }
