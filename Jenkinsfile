@@ -60,8 +60,8 @@ pipeline {
             steps {
                 dir('devops-demo') {
                     echo 'Building the Docker image for local...'
-                    sh 'docker build -t localhost:5000/devops-demo:dev-latest .'
-                    sh 'docker push localhost:5000/devops-demo:dev-latest'
+                    sh 'docker build -t 127.0.0.1:5000/devops-demo:dev-latest .'
+                    sh 'docker push 127.0.0.1:5000/devops-demo:dev-latest'
                 }
             }
         }

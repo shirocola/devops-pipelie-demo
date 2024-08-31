@@ -30,8 +30,8 @@ jobs:
       - name: Build and push Docker image for dev
         if: github.ref == 'refs/heads/dev'
         run: |
-          docker build -t localhost:5000/devops-demo:dev-${{ github.run_id }} .
-          docker push localhost:5000/devops-demo:dev-${{ github.run_id }}
+          docker build -t 127.0.0.1:5000/devops-demo:dev-${{ github.run_id }} .
+          docker push 127.0.0.1:5000/devops-demo:dev-${{ github.run_id }}
 
       # Deploy to Kubernetes (Dev)
       - name: Deploy to Minikube (Dev)
@@ -57,5 +57,5 @@ jobs:
       # Clean up Docker images
       - name: Clean up Docker images
         run: |
-          docker rmi localhost:5000/devops-demo:dev-${{ github.run_id }}
+          docker rmi 127.0.0.1:5000/devops-demo:dev-${{ github.run_id }}
           # docker rmi gcr.io/$PROJECT_ID/devops-demo:staging-${{ github.run_id }}
