@@ -1,10 +1,10 @@
 pipeline {
     agent any
-    // environment {
-    //     // GCR_CREDENTIALS = credentials('gcr-json-key') // Not used for local builds
-    //     // PROJECT_ID = 'your-gcp-project-id' // Not used for local builds
-    //     // SONAR_HOST_URL = 'http://your-sonarqube-server-url'
-    //     // SONAR_LOGIN = credentials('sonar-token')
+    // environment { // Commented out since no variables are used
+    //     GCR_CREDENTIALS = credentials('gcr-json-key') // Not used for local builds
+    //     PROJECT_ID = 'your-gcp-project-id' // Not used for local builds
+    //     SONAR_HOST_URL = 'http://your-sonarqube-server-url'
+    //     SONAR_LOGIN = credentials('sonar-token')
     // }
     stages {
         stage('Start Docker Registry') {
@@ -51,12 +51,12 @@ pipeline {
                 sh 'sh scripts/checkmarx-scan.sh'
             }
         }
-        // stage('Build Docker Image') {
+        // stage('Build Docker Image') { // Not used for local builds
         //     steps {
         //         dir('devops-demo') {
         //             echo 'Building the Docker image...'
-        //             sh 'docker build -t gcr.io/$PROJECT_ID/devops-demo:dev-${env.BUILD_ID} .' // Not used for local builds
-        //             sh 'docker push gcr.io/$PROJECT_ID/devops-demo:dev-${env.BUILD_ID}' // Not used for local builds
+        //             sh 'docker build -t gcr.io/$PROJECT_ID/devops-demo:dev-${env.BUILD_ID} .' 
+        //             sh 'docker push gcr.io/$PROJECT_ID/devops-demo:dev-${env.BUILD_ID}' 
         //         }
         //     }
         // }
@@ -65,7 +65,7 @@ pipeline {
             steps {
                 dir('devops-demo') {
                     echo 'Building the Docker image for local...'
-                    sh 'docker build -t 127.0.0.1:5000/devops-demo:dev-latest .' // Build and push image to local registry
+                    sh 'docker build -t 127.0.0.1:5000/devops-demo:dev-latest .' 
                     sh 'docker push 127.0.0.1:5000/devops-demo:dev-latest'
                 }
             }
@@ -80,24 +80,24 @@ pipeline {
             }
         }
         
-        stage('Port Forwarding Jenkins') { // Added to allow Jenkins access
+        stage('Port Forwarding Jenkins') { // Port forwarding for Jenkins
             steps {
                 script {
-                    sh 'kubectl port-forward svc/jenkins 8080:8080 &' // Port forwarding for Jenkins
+                    sh 'kubectl port-forward svc/jenkins 8080:8080 &'
                 }
             }
         }
-        stage('Port Forwarding Grafana') { // Added to allow Grafana access
+        stage('Port Forwarding Grafana') { // Port forwarding for Grafana
             steps {
                 script {
-                    sh 'kubectl port-forward svc/grafana 3000:3000 &' // Port forwarding for Grafana
+                    sh 'kubectl port-forward svc/grafana 3000:3000 &'
                 }
             }
         }
-        stage('Port Forwarding Prometheus') { // Added to allow Prometheus access
+        stage('Port Forwarding Prometheus') { // Port forwarding for Prometheus
             steps {
                 script {
-                    sh 'kubectl port-forward svc/prometheus 9090:9090 &' // Port forwarding for Prometheus
+                    sh 'kubectl port-forward svc/prometheus 9090:9090 &'
                 }
             }
         }
