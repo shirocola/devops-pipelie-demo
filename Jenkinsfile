@@ -1,12 +1,10 @@
 pipeline {
-   agent {
+    agent {
         docker {
             image 'docker:20.10.7'
             args '-v /var/run/docker.sock:/var/run/docker.sock'
         }
     }
-
-    // agent any
     // environment { // Commented out since no variables are used
     //     GCR_CREDENTIALS = credentials('gcr-json-key') // Not used for local builds
     //     PROJECT_ID = 'your-gcp-project-id' // Not used for local builds
