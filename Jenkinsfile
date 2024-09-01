@@ -1,27 +1,13 @@
 pipeline {
-    agent any
-    
-    stages {
-        stage('Setup Docker') {
-            steps {
-                script {
-                    // Install Docker if necessary
-                    if (!sh(script: 'command -v docker', returnStatus: true) == 0) {
-                        sh '''
-                        echo "Installing Docker..."
-                        sudo apt-get update
-                        sudo apt-get install -y docker.io
-                        sudo systemctl start docker
-                        sudo systemctl enable docker
-                        '''
-                    } else {
-                        echo 'Docker is already installed.'
-                    }
-                }
-            }
+    agent {
+        docker {
+            image 'maven:3.8.1-openjdk-11' // Maven with JDK 11, you can adjust as needed
+            args '-v /var/run/docker.sock:/var/run/docker.sock'
         }
+    }
 
-        stage('Start Docker Registry') {
+    stages {
+        stage('Setup Docker Registry') {
             steps {
                 sh 'docker run -d -p 5000:5000 --restart=always --name registry registry:2 || true'
             }
