@@ -5,8 +5,10 @@ pipeline {
             yaml """
             apiVersion: v1
             kind: Pod
+            metadata:
+              namespace: devops-demo  # Specify the namespace here
             spec:
-              serviceAccountName: jenkins-sa  # Specify the service account
+              serviceAccountName: jenkins-sa  # Ensure this is set to the correct service account
               containers:
               - name: maven
                 image: maven:3.8.1-jdk-11
