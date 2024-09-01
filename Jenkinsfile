@@ -1,7 +1,7 @@
 pipeline {
     agent {
         kubernetes {
-            label 'docker-agent'
+            label 'docker-kubectl-agent'
             yaml """
             apiVersion: v1
             kind: Pod
@@ -23,6 +23,14 @@ pipeline {
                 volumeMounts:
                 - name: docker-sock
                   mountPath: /var/run/docker.sock
+                - name: workspace-volume
+                  mountPath: /home/jenkins/agent
+              - name: kubectl
+                image: lachlanevenson/k8s-kubectl:v1.18.0
+                command:
+                - cat
+                tty: true
+                volumeMounts:
                 - name: workspace-volume
                   mountPath: /home/jenkins/agent
               volumes:
@@ -61,7 +69,7 @@ pipeline {
         }
         stage('Deploy to Minikube') {
             steps {
-                container('docker') {
+                container('kubectl') {
                     echo 'Deploying to Minikube...'
                     sh 'kubectl apply -f deployment.yaml'
                     sh 'kubectl apply -f service.yaml'
