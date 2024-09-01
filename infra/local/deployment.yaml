@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: devops-demo-local
+  namespace: devops-demo
   labels:
     app: devops-demo
 spec:
