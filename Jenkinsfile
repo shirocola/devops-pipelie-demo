@@ -71,8 +71,8 @@ pipeline {
             steps {
                 container('kubectl') {
                     echo 'Deploying to Minikube...'
-                    sh 'kubectl apply -f deployment.yaml'
-                    sh 'kubectl apply -f service.yaml'
+                    sh 'kubectl apply -f infra/local/deployment.yaml'
+                    sh 'kubectl apply -f infra/local/service.yaml'
                 }
             }
         }
