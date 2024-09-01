@@ -6,7 +6,6 @@ metadata:
   labels:
     app: devops-demo
 spec:
-  ServiceAccountName: jenkins-sa
   replicas: 2
   selector:
     matchLabels:
@@ -16,6 +15,7 @@ spec:
       labels:
         app: devops-demo
     spec:
+      serviceAccountName: jenkins-sa  # Correctly reference the service account
       containers:
       - name: devops-demo
         image: 127.0.0.1:5000/devops-demo:dev-latest
