@@ -43,10 +43,11 @@ pipeline {
         }
     }
     stages {
-        stage('Setup RBAC and Namespace') {
+        stage('Setup Namespace and RBAC') {
             steps {
                 container('kubectl') {
-                    echo 'Setting up RBAC and Namespace...'
+                    echo 'Setting up Namespace and RBAC...'
+                    sh 'kubectl apply -f infra/local/namespace.yaml || true'  // Create namespace if not already created
                     sh 'kubectl apply -f infra/local/rbac.yaml'
                 }
             }
