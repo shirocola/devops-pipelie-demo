@@ -3,23 +3,21 @@ kind: ServiceAccount
 metadata:
   name: jenkins-sa
   namespace: devops-demo
-
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  namespace: devops-demo
   name: jenkins-role
+  namespace: devops-demo
 rules:
-- apiGroups: ["", "apps", "extensions"]
-  resources: ["pods", "services", "deployments"]
-  verbs: ["get", "list", "watch", "create", "delete", "patch", "update"]
-
+- apiGroups: [""]
+  resources: ["pods", "pods/logs", "services", "deployments", "configmaps", "secrets"]
+  verbs: ["get", "list", "watch", "create", "delete", "update"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: jenkins-rolebinding
+  name: jenkins-role-binding
   namespace: devops-demo
 subjects:
 - kind: ServiceAccount
