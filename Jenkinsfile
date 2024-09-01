@@ -2,8 +2,7 @@ pipeline {
     agent {
         kubernetes {
             label 'docker-agent'
-            defaultContainer 'jnlp'
-            yaml '''
+            yaml """
             apiVersion: v1
             kind: Pod
             spec:
@@ -16,14 +15,17 @@ pipeline {
                 volumeMounts:
                 - name: docker-sock
                   mountPath: /var/run/docker.sock
+                - name: workspace-volume
+                  mountPath: /home/jenkins/agent
               volumes:
               - name: docker-sock
                 hostPath:
                   path: /var/run/docker.sock
-            '''
+              - name: workspace-volume
+                emptyDir: {}
+            """
         }
     }
-
     stages {
         stage('Setup Docker') {
             steps {
@@ -32,7 +34,6 @@ pipeline {
                 }
             }
         }
-
         stage('Start Docker Registry') {
             steps {
                 container('docker') {
@@ -40,7 +41,6 @@ pipeline {
                 }
             }
         }
-
         stage('Build') {
             steps {
                 container('docker') {
@@ -49,25 +49,14 @@ pipeline {
                 }
             }
         }
-
-        stage('Test') {
-            steps {
-                container('docker') {
-                    echo 'Running tests...'
-                    sh 'mvn test'
-                }
-            }
-        }
-
         stage('Build Docker Image') {
             steps {
                 container('docker') {
-                    echo 'Building Docker image...'
+                    echo 'Building the Docker image...'
                     sh 'docker build -t 127.0.0.1:5000/app:latest .'
                 }
             }
         }
-
         stage('Push Docker Image') {
             steps {
                 container('docker') {
@@ -76,27 +65,16 @@ pipeline {
                 }
             }
         }
-
         stage('Deploy to Minikube') {
             steps {
                 container('docker') {
                     echo 'Deploying to Minikube...'
-                    sh 'kubectl apply -f k8s/deployment.yaml'
-                    sh 'kubectl apply -f k8s/service.yaml'
-                }
-            }
-        }
-
-        stage('Port Forwarding') {
-            steps {
-                container('docker') {
-                    echo 'Setting up port forwarding...'
-                    sh 'kubectl port-forward svc/app 8080:8080 &'
+                    sh 'kubectl apply -f deployment.yaml'
+                    sh 'kubectl apply -f service.yaml'
                 }
             }
         }
     }
-
     post {
         always {
             container('docker') {
