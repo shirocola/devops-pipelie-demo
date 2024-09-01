@@ -7,6 +7,14 @@ pipeline {
             kind: Pod
             spec:
               containers:
+              - name: maven
+                image: maven:3.8.1-jdk-11
+                command:
+                - cat
+                tty: true
+                volumeMounts:
+                - name: workspace-volume
+                  mountPath: /home/jenkins/agent
               - name: docker
                 image: docker:20.10.7
                 command:
@@ -27,23 +35,9 @@ pipeline {
         }
     }
     stages {
-        stage('Setup Docker') {
-            steps {
-                container('docker') {
-                    sh 'docker --version'
-                }
-            }
-        }
-        stage('Start Docker Registry') {
-            steps {
-                container('docker') {
-                    sh 'docker run -d -p 5000:5000 --restart=always --name registry registry:2 || true'
-                }
-            }
-        }
         stage('Build') {
             steps {
-                container('docker') {
+                container('maven') {
                     echo 'Building the application...'
                     sh 'mvn clean package'
                 }
