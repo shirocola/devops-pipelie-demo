@@ -6,6 +6,7 @@ pipeline {
             apiVersion: v1
             kind: Pod
             spec:
+              serviceAccountName: jenkins-sa  # Specify the service account
               containers:
               - name: maven
                 image: maven:3.8.1-jdk-11
