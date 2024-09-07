@@ -1,27 +1,29 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: my-app-deployment               # ชื่อของ deployment
+  name: devops-pipeline-demo-deployment      # ชื่อของ deployment
   labels:
-    app: my-app
+    app: devops-pipeline-demo
 spec:
-  replicas: 3                           # จำนวน replicas (Pod) ที่ต้องการ
+  replicas: 3                                # จำนวน replicas (Pod) ที่ต้องการ
   selector:
     matchLabels:
-      app: my-app
+      app: devops-pipeline-demo
   template:
     metadata:
       labels:
-        app: my-app
+        app: devops-pipeline-demo
     spec:
       containers:
-      - name: my-app-container
-        image: gcr.io/your-project-id/my-app:latest   # Docker image จาก GCR
+      - name: devops-pipeline-demo-container
+        image: gcr.io/your-project-id/devops-pipeline-demo:latest   # Docker image จาก GCR
         ports:
         - containerPort: 80                          # พอร์ตที่ expose
-        env:                                         # กำหนด environment variables (ถ้ามี)
-        - name: NODE_ENV
-          value: "production"
+        envFrom:                                     # ดึง environment variables จาก ConfigMap หรือ Secrets
+        - configMapRef:
+            name: devops-pipeline-demo-config
+        - secretRef:
+            name: devops-pipeline-demo-secrets
         resources:
           limits:
             memory: "512Mi"                          # กำหนด resource limits
@@ -41,3 +43,17 @@ spec:
             port: 80
           initialDelaySeconds: 15
           periodSeconds: 20
+---
+# Horizontal Pod Autoscaler (HPA) เพื่อการปรับขยาย Pods ตามโหลด
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: devops-pipeline-demo-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: devops-pipeline-demo-deployment
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
