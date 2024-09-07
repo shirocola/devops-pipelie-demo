@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: my-app              # ชื่อแอปพลิเคชันใน ArgoCD
+  namespace: argocd         # Namespace ที่ ArgoCD ติดตั้ง
+spec:
+  project: default          # โปรเจกต์ที่ใช้ใน ArgoCD (สามารถเปลี่ยนได้ตามต้องการ)
+  source:
+    repoURL: 'https://github.com/your-repo.git'    # URL ของ repository ที่ต้องการ deploy
+    targetRevision: HEAD                           # Branch หรือ commit ที่จะ deploy
+    path: 'k8s'                                    # เส้นทางที่มีไฟล์ manifest ของ Kubernetes
+  destination:
+    server: 'https://kubernetes.default.svc'       # ที่อยู่ของ Kubernetes cluster
+    namespace: default                             # Namespace ที่จะ deploy แอปพลิเคชัน
+  syncPolicy:
+    automated:
+      prune: true                                  # ลบ resources ที่ไม่มีใน Git
+      selfHeal: true                               # แก้ไข resources โดยอัตโนมัติหากมีการเปลี่ยนแปลง
+    retry:
+      limit: 5                                     # กำหนดจำนวนครั้งที่ ArgoCD จะลอง deploy ใหม่หากเกิดข้อผิดพลาด

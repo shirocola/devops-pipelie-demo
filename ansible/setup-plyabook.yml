@@ -1,0 +1,35 @@
+---
+- name: Setup Kubernetes Environment
+  hosts: all
+  become: yes  # ใช้ sudo เพื่อรันคำสั่งที่ต้องการสิทธิ์ root
+  tasks:
+    - name: Install Docker
+      apt:
+        name: docker.io
+        state: present
+        update_cache: yes
+
+    - name: Start Docker service
+      systemd:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Install Kubernetes CLI (kubectl)
+      shell: |
+        curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+        chmod +x kubectl
+        mv kubectl /usr/local/bin/
+
+    - name: Install Helm
+      shell: |
+        curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+    - name: Verify Docker installation
+      command: docker --version
+
+    - name: Verify kubectl installation
+      command: kubectl version --client
+
+    - name: Verify Helm installation
+      command: helm version
