@@ -179,6 +179,7 @@ pipeline {
             sh 'gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS'
             sh 'gcloud auth configure-docker'
             docker.image("${GCR_IMAGE}:latest").push()
+            docker.image("${GCR_IMAGE}:dev").push()
           }
         }
       }
