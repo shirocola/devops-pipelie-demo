@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app-deployment               # ชื่อของ deployment
+  labels:
+    app: my-app
+spec:
+  replicas: 3                           # จำนวน replicas (Pod) ที่ต้องการ
+  selector:
+    matchLabels:
+      app: my-app
+  template:
+    metadata:
+      labels:
+        app: my-app
+    spec:
+      containers:
+      - name: my-app-container
+        image: gcr.io/your-project-id/my-app:latest   # Docker image จาก GCR
+        ports:
+        - containerPort: 80                          # พอร์ตที่ expose
+        env:                                         # กำหนด environment variables (ถ้ามี)
+        - name: NODE_ENV
+          value: "production"
+        resources:
+          limits:
+            memory: "512Mi"                          # กำหนด resource limits
+            cpu: "500m"
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+        readinessProbe:                              # Readiness probe เพื่อตรวจสอบว่า pod พร้อมให้บริการหรือไม่
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:                               # Liveness probe เพื่อตรวจสอบว่าต้อง restart pod หรือไม่
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 15
+          periodSeconds: 20
