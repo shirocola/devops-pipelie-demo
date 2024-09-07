@@ -2,6 +2,16 @@
 
 This project demonstrates a complete CI/CD pipeline using Jenkins, Terraform, Docker, Kubernetes, Helm, Vault, Prometheus, Grafana, and Loki for logging. It automates the deployment of a Node.js application to Google Kubernetes Engine (GKE) with integration for monitoring, logging, and secret management.
 
+## Table of Contents
+- [Technologies Used](#technologies-used)
+- [Pipeline Overview](#pipeline-overview)
+- [Prerequisites](#prerequisites)
+- [Setup Instructions](#setup-instructions)
+- [CI/CD Pipeline Stages](#cicd-pipeline-stages)
+- [Deploying to Production](#deploying-to-production)
+- [Monitoring and Logging](#monitoring-and-logging)
+
+
 ## Technologies Used
 
 - **Jenkins**: CI/CD tool used to automate the build and deployment process.
