@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devops-pipeline-demo-dev
+  labels:
+    app: devops-pipeline-demo
+    environment: dev
+spec:
+  replicas: 2  # จำนวนน้อยกว่าสำหรับ development environment
+  selector:
+    matchLabels:
+      app: devops-pipeline-demo
+  template:
+    metadata:
+      labels:
+        app: devops-pipeline-demo
+        environment: dev
+    spec:
+      containers:
+      - name: devops-pipeline-demo-container
+        image: gcr.io/your-project-id/devops-pipeline-demo:dev   # ชื่อ Image แบบ environment-specific
+        ports:
+        - containerPort: 80
+        env:
+        - name: NODE_ENV
+          value: "development"
+        resources:
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 15
+          periodSeconds: 20

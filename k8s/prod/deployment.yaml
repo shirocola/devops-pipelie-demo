@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devops-pipeline-demo-prod
+  labels:
+    app: devops-pipeline-demo
+    environment: prod
+spec:
+  replicas: 4  # เพิ่มจำนวน replicas สำหรับ production
+  selector:
+    matchLabels:
+      app: devops-pipeline-demo
+  template:
+    metadata:
+      labels:
+        app: devops-pipeline-demo
+        environment: prod
+    spec:
+      containers:
+      - name: devops-pipeline-demo-container
+        image: gcr.io/your-project-id/devops-pipeline-demo:prod  # Image ของ production
+        ports:
+        - containerPort: 80
+        env:
+        - name: NODE_ENV
+          value: "production"
+        resources:
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 15
+          periodSeconds: 20
