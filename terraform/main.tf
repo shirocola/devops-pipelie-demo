@@ -1,8 +1,13 @@
 provider "google" {
-    credentials = file("path/to/your-credentials.json")  # ใช้ Google Cloud service account credentials
-    project = "project-id"
-    region = "southasia-east1"
+  credentials = var.google_credentials
+  project     = var.project_id
+  region      = var.region
 }
+
+variable "google_credentials" {
+  type = string
+}
+
 
 resource "google_container_cluster" "primary" {
   name     = var.cluster_name
