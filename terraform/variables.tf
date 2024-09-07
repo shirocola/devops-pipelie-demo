@@ -6,7 +6,7 @@ variable "project_id" {
 variable "region" {
   description = "The region where resources will be deployed"
   type        = string
-  default     = "us-central1"
+  default     = "asia-southeast1"
 }
 
 variable "cluster_name" {
