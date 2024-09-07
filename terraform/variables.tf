@@ -1,18 +1,17 @@
 variable "google_credentials" {
-  description = "Google Cloud credentials in JSON format"
+  description = "Path to the Google Cloud credentials JSON file"
   type        = string
 }
 
 variable "project_id" {
   description = "The Google Cloud project ID"
   type        = string
-  default     = "your-project-id"
 }
 
 variable "region" {
   description = "The region where resources will be deployed"
   type        = string
-  default     = "asia-southeast1"  # Singapore
+  default     = "asia-southeast1"
 }
 
 variable "cluster_name" {
