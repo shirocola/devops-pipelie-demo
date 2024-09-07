@@ -5,7 +5,7 @@ pipeline {
     GCP_PROJECT = 'your-project-id'            // Google Cloud Project ID
     GCR_IMAGE = "gcr.io/${GCP_PROJECT}/app"    // Docker image ที่จะ push ไป GCR
     K8S_DEPLOYMENT_NAME = 'app-deployment'     // ชื่อ Kubernetes deployment
-    K8S_NAMESPACE = 'default'                 // Namespace ใน Kubernetes
+    K8S_NAMESPACE = 'default'                  // Namespace ใน Kubernetes
   }
 
   stages {
@@ -16,21 +16,51 @@ pipeline {
       }
     }
 
-    stage('Run Unit Tests') {
+    stage('Lint Code') {
       steps {
         script {
-          // รัน unit tests
+          // Run ESLint หรือ linters ตามโปรเจกต์ของคุณ
           sh 'npm install'
-          sh 'npm run test'   // สั่งรัน unit test ของ Node.js (ปรับใช้ตาม project)
+          sh 'npm run lint'
         }
       }
     }
 
-    stage('Run Integration Tests') {
+    stage('Run Tests') {
+      parallel {
+        stage('Unit Tests') {
+          steps {
+            script {
+              // รัน unit tests
+              sh 'npm run test'
+            }
+          }
+        }
+        stage('Integration Tests') {
+          steps {
+            script {
+              // รัน integration tests
+              sh 'npm run test:integration'
+            }
+          }
+        }
+      }
+    }
+
+    stage('Run E2E Tests') {
       steps {
         script {
-          // รัน integration tests
-          sh 'npm run test:integration'  // สั่งรัน integration test ของ Node.js (ปรับใช้ตาม project)
+          // รัน E2E tests
+          sh 'npm run test:e2e'
+        }
+      }
+    }
+
+    stage('Security Scan') {
+      steps {
+        script {
+          // สแกน security ด้วย Snyk หรือเครื่องมืออื่นๆ
+          sh 'snyk test'
         }
       }
     }
@@ -57,26 +87,52 @@ pipeline {
       }
     }
 
+    stage('Deploy to Staging') {
+      steps {
+        script {
+          // Set rolling update สำหรับ Kubernetes deployment
+          sh """
+            kubectl set image deployment/staging-${K8S_DEPLOYMENT_NAME} staging-${K8S_DEPLOYMENT_NAME}=${GCR_IMAGE}:latest --namespace=${K8S_NAMESPACE}
+            kubectl rollout status deployment/staging-${K8S_DEPLOYMENT_NAME} --namespace=${K8S_NAMESPACE}
+          """
+        }
+      }
+    }
+
     stage('Deploy to GKE') {
+      options {
+        timeout(time: 10, unit: 'MINUTES')  // กำหนด timeout 10 นาทีสำหรับการ deploy
+      }
       steps {
         script {
           // Set rolling update สำหรับ Kubernetes deployment
           sh """
             kubectl set image deployment/${K8S_DEPLOYMENT_NAME} ${K8S_DEPLOYMENT_NAME}=${GCR_IMAGE}:latest --namespace=${K8S_NAMESPACE}
             kubectl rollout status deployment/${K8S_DEPLOYMENT_NAME} --namespace=${K8S_NAMESPACE}
-            kubectl rollout restart deployment/${K8S_DEPLOYMENT_NAME} --namespace=${K8S_NAMESPACE}  # Restart deployment เพื่อใช้ rolling update
           """
         }
       }
     }
   }
 
-  post {
+post {
     success {
-      echo "Deployment completed successfully!"
+        emailext (
+            subject: "Jenkins Build Success - ${env.JOB_NAME}",
+            body: "<p>The build for <b>${env.JOB_NAME}</b> was successful!</p>",
+            mimeType: 'text/html',
+            to: "recipient@example.com"
+        )
     }
     failure {
-      echo "Deployment failed!"
+        emailext (
+            subject: "Jenkins Build Failure - ${env.JOB_NAME}",
+            body: "<p>The build for <b>${env.JOB_NAME}</b> has failed. Please investigate.</p>",
+            mimeType: 'text/html',
+            to: "recipient@example.com"
+        )
     }
-  }
+}
+
+
 }

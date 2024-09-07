@@ -1,18 +1,24 @@
+variable "google_credentials" {
+  description = "Google Cloud credentials in JSON format"
+  type        = string
+}
+
 variable "project_id" {
   description = "The Google Cloud project ID"
   type        = string
+  default     = "your-project-id"
 }
 
 variable "region" {
   description = "The region where resources will be deployed"
   type        = string
-  default     = "asia-southeast1"
+  default     = "asia-southeast1"  # Singapore
 }
 
 variable "cluster_name" {
   description = "The name of the GKE cluster"
   type        = string
-  default     = "gke-cluster"
+  default     = "ecommerce-backend-cluster"
 }
 
 variable "node_count" {
