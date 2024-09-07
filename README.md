@@ -76,25 +76,25 @@ Trigger the pipeline from Jenkins to start the CI/CD process. The pipeline will:
 
 
 ## CI/CD Pipeline Stages
-1. Checkout Code: Fetches the latest code from the repository.
+1. **Checkout Code:** Fetches the latest code from the repository.
 
-2. Terraform Init & Apply: Provisions the necessary GCP infrastructure.
+2. **Terraform Init & Apply:** Provisions the necessary GCP infrastructure.
 
-3. Lint Code: Runs code linting checks.
+3. **Lint Code:** Runs code linting checks.
 
-4. Run Tests: Executes unit, integration, and end-to-end (E2E) tests.
+4. **Run Tests:** Executes unit, integration, and end-to-end (E2E) tests.
 
-5. Build & Push Docker Image: Builds the app image and pushes it to Google Container Registry     (GCR).
+5. **Build & Push Docker Image:** Builds the app image and pushes it to Google Container Registry     (GCR).
 
-6. Deploy to Staging (Dev): Deploys the application to the staging environment on GKE.
+6. **Deploy to Staging (Dev):** Deploys the application to the staging environment on GKE.
 
-7. Security Scan: Performs a security scan on the codebase.
+7. **Security Scan:** Performs a security scan on the codebase.
 
-8. Promote to Production: Tags the image as prod and pushes it to GCR.
+8. **Promote to Production:** Tags the image as prod and pushes it to GCR.
 
-9. Deploy to GKE (Prod): Deploys the prod-tagged image to the production environment.
+9. **Deploy to GKE (Prod):** Deploys the prod-tagged image to the production environment.
 
-10. Cleanup: Cleans up temporary resources and uninstalls services like Prometheus and Grafana.
+10. **Cleanup:** Cleans up temporary resources and uninstalls services like Prometheus and Grafana.
 
 11. This reflects the actual sequence as implemented in the Jenkins pipeline.
 
