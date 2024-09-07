@@ -5,13 +5,13 @@ provider "google" {
 }
 
 resource "google_container_cluster" "primary" {
-    name  = "gke-cluster"
-    location = "southasia-east1"
-    initial_node_count = 3
-    node_config {
-      preemptible = true
-      machine_type = "e2-medium"
-      disk_size_gb = 30
-    }
+  name     = var.cluster_name
+  location = var.region
 
+  node_config {
+    machine_type = var.machine_type
+    disk_size_gb = var.disk_size
+  }
+
+  initial_node_count = var.node_count
 }
