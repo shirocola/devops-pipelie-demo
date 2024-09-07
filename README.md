@@ -19,12 +19,19 @@ This project demonstrates a complete CI/CD pipeline using Jenkins, Terraform, Do
 The pipeline is defined in the `Jenkinsfile` and automates the following steps:
 
 1. **Code Checkout**: Fetches the latest code from the repository.
+
 2. **Terraform Init & Apply**: Provisions the necessary GCP infrastructure.
+
 3. **Build Docker Image**: Builds the Docker image for the application.
+
 4. **Deploy Prometheus, Grafana & Loki**: Deploys monitoring and logging tools using Helm.
+
 5. **Push Docker Image**: Pushes the built Docker image to Google Container Registry (GCR).
+
 6. **Deploy to Staging (Dev)**: Deploys the application to the staging environment on GKE.
+
 7. **Run Tests**: Runs unit, integration, and end-to-end tests.
+
 8. **Promote to Production**: Tags the image as `prod` and deploys it to the production environment.
 
 ## Prerequisites
@@ -52,27 +59,43 @@ npm install
 ```
 ### Step 4: Configure Jenkins
 1.Create a new Jenkins pipeline job.
+
 2.Point Jenkins to this repository.
+
 3.Configure necessary credentials in Jenkins (GCP Service Account, Vault Token, etc.).
+
 
 ### Step 5: Run the Pipeline
 Trigger the pipeline from Jenkins to start the CI/CD process. The pipeline will:
 
 1.Provision infrastructure using Terraform.
+
 2.Build and deploy the application to GKE.
+
 3.Set up monitoring and logging using Prometheus, Grafana, and Loki.
+
 
 ## CI/CD Pipeline Stages
 1.Checkout Code: Fetches the latest code from the repository.
+
 2.Terraform Init & Apply: Provisions the necessary GCP infrastructure.
+
 3.Lint Code: Runs code linting checks.
+
 4.Run Tests: Executes unit, integration, and end-to-end (E2E) tests.
+
 5.Build & Push Docker Image: Builds the app image and pushes it to Google Container Registry (GCR).
+
 6.Deploy to Staging (Dev): Deploys the application to the staging environment on GKE.
+
 7.Security Scan: Performs a security scan on the codebase.
+
 8.Promote to Production: Tags the image as prod and pushes it to GCR.
+
 9.Deploy to GKE (Prod): Deploys the prod-tagged image to the production environment.
+
 10.Cleanup: Cleans up temporary resources and uninstalls services like Prometheus and Grafana.
+
 11.This reflects the actual sequence as implemented in the Jenkins pipeline.
 
 ## Deploying to Production
