@@ -3,10 +3,12 @@ pipeline {
 
   environment {
     GCP_PROJECT = 'your-project-id'    // Google Cloud Project ID
-    GCR_IMAGE = "gcr.io/${GCP_PROJECT}/app"
-    K8S_DEPLOYMENT_NAME = 'app-deployment' // Kubernetes deployment name
+    GCR_IMAGE = "gcr.io/${GCP_PROJECT}/devops-pipeline-demo"
+    K8S_DEPLOYMENT_NAME = 'devops-pipeline-demo-deployment' // Kubernetes deployment name
     K8S_NAMESPACE = 'default'              // Kubernetes namespace
     TERRAFORM_DIR = 'terraform'            // Terraform directory
+    VAULT_ADDR = 'http://127.0.0.1:8200'   // Vault server address
+    VAULT_TOKEN = credentials('vault-token') // Jenkins Vault plugin credential
   }
 
   stages {
@@ -30,6 +32,43 @@ pipeline {
       post {
         failure {
           error 'Terraform apply failed. Stopping pipeline.'
+        }
+      }
+    }
+
+    stage('Deploy Prometheus & Grafana') {
+      steps {
+        script {
+          echo 'Deploying Prometheus and Grafana using Helm'
+          sh '''
+            helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+            helm repo update
+            helm upgrade --install prometheus prometheus-community/prometheus --namespace monitoring --create-namespace
+            helm upgrade --install grafana grafana/grafana --namespace monitoring --create-namespace --set adminPassword=admin
+          '''
+        }
+      }
+      post {
+        failure {
+          error 'Failed to deploy Prometheus and Grafana.'
+        }
+      }
+    }
+
+    stage('Fetch Secrets from Vault') {
+      steps {
+        script {
+          withVault([vaultUrl: env.VAULT_ADDR, tokenCredentialId: env.VAULT_TOKEN]) {
+            def secrets = vault path: 'secret/data/devops-pipeline-demo', engineVersion: 2
+            env.DB_USERNAME = secrets.data.data.username
+            env.DB_PASSWORD = secrets.data.data.password
+            echo "Vault secrets fetched successfully"
+          }
+        }
+      }
+      post {
+        failure {
+          error 'Failed to fetch secrets from Vault.'
         }
       }
     }
@@ -121,7 +160,7 @@ pipeline {
       }
     }
 
-    stage('Deploy to Staging') {
+    stage('Deploy to Staging (Dev)') {
       steps {
         script {
           sh """
@@ -132,12 +171,25 @@ pipeline {
       }
       post {
         failure {
-          error 'Deployment to staging failed.'
+          error 'Deployment to staging (dev) failed.'
         }
       }
     }
 
-    stage('Deploy to GKE') {
+    stage('Promote to Prod') {
+      when {
+        branch 'main'
+      }
+      steps {
+        script {
+          echo "Promoting to production..."
+          docker.image("${GCR_IMAGE}:latest").tag('prod')
+          docker.image("${GCR_IMAGE}:prod").push()
+        }
+      }
+    }
+
+    stage('Deploy to GKE (Prod)') {
       options {
         timeout(time: 10, unit: 'MINUTES')
       }
@@ -146,15 +198,15 @@ pipeline {
           withCredentials([file(credentialsId: 'gcp-service-account-key', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
             sh 'gcloud container clusters get-credentials ${K8S_DEPLOYMENT_NAME} --zone asia-southeast1 --project ${GCP_PROJECT}'
             sh """
-              kubectl set image deployment/${K8S_DEPLOYMENT_NAME} ${K8S_DEPLOYMENT_NAME}=${GCR_IMAGE}:latest --namespace=${K8S_NAMESPACE}
-              kubectl rollout status deployment/${K8S_DEPLOYMENT_NAME} --namespace=${K8S_NAMESPACE}
+              kubectl set image deployment/prod-${K8S_DEPLOYMENT_NAME} prod-${K8S_DEPLOYMENT_NAME}=${GCR_IMAGE}:prod --namespace=${K8S_NAMESPACE}
+              kubectl rollout status deployment/prod-${K8S_DEPLOYMENT_NAME} --namespace=${K8S_NAMESPACE}
             """
           }
         }
       }
       post {
         failure {
-          error 'Deployment to GKE failed.'
+          error 'Deployment to GKE (prod) failed.'
         }
       }
     }
