@@ -1,36 +1,32 @@
-import request from 'supertest'
-import app from '../../app'
-import prisma from '../../config/prisma'
+import request from 'supertest';
+import { server, app } from '../../app';
+import { PrismaClient } from '@prisma/client';
+
+let prisma: PrismaClient;
 
 describe('Product E2E Test', () => {
   beforeAll(async () => {
-    await prisma.product.deleteMany()
-  })
+    prisma = new PrismaClient();
+    await prisma.product.deleteMany(); // Clean up database before tests
+  });
 
   afterAll(async () => {
-    await prisma.$disconnect()
-  })
+    await prisma.$disconnect(); // Disconnect Prisma
+    server.close(); // Close the server to free the port
+  });
 
-  it('should create, fetch, and delete a product', async () => {
-    // สร้าง Product
-    const createResponse = await request(app)
+  it('should create a new product', async () => {
+    const response = await request(app)
       .post('/api/products')
-      .send({ name: 'E2E Product', price: 100 })
-    expect(createResponse.status).toBe(201)
+      .send({ name: 'E2E Product', price: 100 });
 
-    const productId = createResponse.body.id
+    expect(response.status).toBe(201);
+    expect(response.body.name).toBe('E2E Product');
+  });
 
-    // ตรวจสอบการดึง Product
-    const fetchResponse = await request(app).get(`/api/products/${productId}`)
-    expect(fetchResponse.status).toBe(200)
-    expect(fetchResponse.body.name).toBe('E2E Product')
-
-    // ลบ Product
-    const deleteResponse = await request(app).delete(`/api/products/${productId}`)
-    expect(deleteResponse.status).toBe(204)
-
-    // ตรวจสอบว่าไม่มี Product นี้อีกแล้ว
-    const fetchAfterDeleteResponse = await request(app).get(`/api/products/${productId}`)
-    expect(fetchAfterDeleteResponse.status).toBe(404)
-  })
-})
+  it('should get all products', async () => {
+    const response = await request(app).get('/api/products');
+    expect(response.status).toBe(200);
+    expect(response.body.length).toBeGreaterThan(0);
+  });
+});

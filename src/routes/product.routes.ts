@@ -1,13 +1,15 @@
-import { Router } from 'express'
-import { ProductController } from '../controllers/product.controller'
+import { Router } from 'express';
+import { ProductController } from '../controllers/product.controller';
+import { PrismaClient } from '@prisma/client';
 
-const productController = new ProductController()
-const router = Router()
+const router = Router();
+const prisma = new PrismaClient();
+const productController = new ProductController(prisma);
 
-router.get('/products', (req, res) => productController.getAllProducts(req, res))
-router.get('/products/:id', (req, res) => productController.getProductById(req, res))
-router.post('/products', (req, res) => productController.createProduct(req, res))
-router.put('/products/:id', (req, res) => productController.updateProduct(req, res))
-router.delete('/products/:id', (req, res) => productController.deleteProduct(req, res))
+router.get('/', productController.getAllProducts.bind(productController)); // Binding ensures the correct `this` context
+router.get('/:id', productController.getProductById.bind(productController));
+router.post('/', productController.createProduct.bind(productController));
+router.put('/:id', productController.updateProduct.bind(productController));
+router.delete('/:id', productController.deleteProduct.bind(productController));
 
-export default router
+export default router;

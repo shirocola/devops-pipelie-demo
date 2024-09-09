@@ -1,14 +1,15 @@
-import express from 'express'
-import productRoutes from './routes/product.routes'
+import express from 'express';
+import productRoutes from './routes/product.routes';
 
-const app = express()
+const app = express();
+app.use(express.json());
 
-app.use(express.json()) // สำหรับการรับข้อมูล JSON
-app.use('/api', productRoutes)
+// Use the product routes with a base path
+app.use('/api/products', productRoutes);
 
-const port = process.env.PORT || 3000
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`)
-})
+// Export app and server for testing purposes
+const server = app.listen(3000, () => {
+  console.log('Server is running on port 3000');
+});
 
-export default app
+export { app, server };

@@ -30,8 +30,6 @@ prisma/dev.db-journal
 prisma/.env
 
 # Docker
-Dockerfile
-docker-compose.yml
 docker-compose.override.yml
 
 # MacOS

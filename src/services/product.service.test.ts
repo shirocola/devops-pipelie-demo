@@ -1,31 +1,54 @@
-import { ProductService } from './product.service'
-import { Product } from '../models/product.model'
+import { PrismaClient } from '@prisma/client';
+import { ProductService } from './product.service';
 
-// Mock Prisma client
-jest.mock('../models/product.model')
+// Mocking PrismaClient's product methods with jest.fn()
+const prismaMock = {
+  product: {
+    create: jest.fn(),
+    findMany: jest.fn(),
+  },
+} as unknown as PrismaClient;
 
 describe('ProductService', () => {
-  let productService: ProductService
-  let mockProductModel: jest.Mocked<Product>
+  let productService: ProductService;
 
   beforeEach(() => {
-    productService = new ProductService()
-    mockProductModel = new Product() as jest.Mocked<Product>
-  })
+    productService = new ProductService(prismaMock); // Inject the mocked Prisma client
+  });
 
   it('should create a product', async () => {
-    mockProductModel.createProduct = jest.fn().mockResolvedValue({ name: 'Test Product', price: 100 })
+    const mockProduct = {
+      id: 1,
+      name: 'Test Product',
+      price: 100,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
 
-    const result = await productService.createProduct('Test Product', 100)
-    expect(result.name).toBe('Test Product')
-    expect(result.price).toBe(100)
-  })
+    // Correctly mock the return value for prisma.product.create
+    (prismaMock.product.create as jest.Mock).mockResolvedValue(mockProduct);
+
+    const result = await productService.createProduct('Test Product', 100);
+    expect(result.name).toBe('Test Product');
+    expect(result.price).toBe(100);
+  });
 
   it('should fetch all products', async () => {
-    mockProductModel.getAllProducts = jest.fn().mockResolvedValue([{ name: 'Product 1', price: 50 }])
+    const mockProducts = [
+      {
+        id: 1,
+        name: 'Product 1',
+        price: 50,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ];
 
-    const products = await productService.getAllProducts()
-    expect(products.length).toBe(1)
-    expect(products[0].name).toBe('Product 1')
-  })
-})
+    // Correctly mock the return value for prisma.product.findMany
+    (prismaMock.product.findMany as jest.Mock).mockResolvedValue(mockProducts);
+
+    const products = await productService.getAllProducts();
+    expect(products.length).toBe(1);
+    expect(products[0].name).toBe('Product 1');
+  });
+});

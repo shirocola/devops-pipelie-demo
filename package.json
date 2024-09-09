@@ -7,8 +7,10 @@
     "build": "tsc",
     "lint": "eslint 'src/**/*.ts'",
     "format": "prettier --write 'src/**/*.ts'",
-    "test": "jest",
-    "prepare": "husky"
+    "test": "jest --detectOpenHandles",
+    "prepare":  "if [ \"$NODE_ENV\" != \"production\" ]; then husky install; fi",
+    "test:integration": "jest --testMatch='**/*.test.integration.ts'",
+    "test:e2e": "jest --testMatch='**/*.test.e2e.ts'"
   },
   "keywords": [],
   "author": "",
