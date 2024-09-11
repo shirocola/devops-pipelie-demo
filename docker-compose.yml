@@ -11,11 +11,26 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
 
+  backend:
+    build: .
+    ports:
+      - "3000:3000"  # Ensure your backend service is exposed on port 3000
+    depends_on:
+      - postgres
+    environment:
+      DATABASE_URL: "postgresql://postgres:password@postgres:5432/ecommerce"
+    
   k6:
     image: loadimpact/k6
     volumes:
       - ./scripts:/scripts
     command: run /scripts/loadtest.js
+    depends_on:
+      - backend  # Ensure K6 waits for backend to be ready
+    environment:
+      - K6_HOST=backend
+    networks:
+      - default
 
 volumes:
   postgres-data:
