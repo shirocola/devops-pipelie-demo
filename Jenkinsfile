@@ -9,12 +9,11 @@ pipeline {
     TERRAFORM_DIR = 'terraform'
     VAULT_ADDR = 'http://127.0.0.1:8200'
     VAULT_TOKEN = credentials('vault-token')
-    ADMIN_PASSWORD = credentials('grafana-admin-password') // Avoid hardcoded passwords
+    ADMIN_PASSWORD = credentials('grafana-admin-password')
   }
 
   stages {
-
-    // Modularized Terraform Stage
+    // Terraform stage for infrastructure provisioning
     stage('Terraform Init & Apply') {
       steps {
         dir("${TERRAFORM_DIR}") {
@@ -36,6 +35,13 @@ pipeline {
     stage('Fetch Secrets from Vault') {
       steps {
         fetchSecretsFromVault()
+      }
+    }
+
+    // Run Ansible Playbook for additional configuration
+    stage('Run Ansible Setup') {
+      steps {
+        runAnsiblePlaybook()
       }
     }
 
@@ -78,14 +84,14 @@ pipeline {
       }
     }
 
-    // Update Kubernetes Manifests and Deploy to Staging
-    stage('Update Kubernetes & Deploy to Staging') {
+    // Update Kubernetes manifests and push changes to Git
+    stage('Update Kubernetes Manifests for ArgoCD') {
       steps {
-        deployToKubernetes('staging')
+        updateKubernetesManifests()
       }
     }
 
-    // Run Load Test
+    // Run Load Test (optional for staging)
     stage('Run Load Test') {
       when {
         branch 'staging'
@@ -95,7 +101,7 @@ pipeline {
       }
     }
 
-    // Promote to Production
+    // Promotion to Production via ArgoCD
     stage('Promote to Production') {
       when {
         branch 'main'
@@ -104,14 +110,6 @@ pipeline {
         promoteToProduction()
       }
     }
-
-    // Deploy to Production
-    stage('Deploy to GKE (Prod)') {
-      steps {
-        deployToKubernetes('prod')
-      }
-    }
-
   }
 
   post {
@@ -157,6 +155,13 @@ def fetchSecretsFromVault() {
   }
 }
 
+// Run Ansible Playbook
+def runAnsiblePlaybook() {
+  sh '''
+    ansible-playbook -i ansible/inventory ansible/setup-playbook.yml --extra-vars "env=staging"
+  '''
+}
+
 def lintCode() {
   sh 'npm install'
   sh 'npm run lint'
@@ -183,13 +188,17 @@ def buildAndPushDockerImage() {
   }
 }
 
-def deployToKubernetes(environment) {
-  if (environment == 'staging') {
-    sh "kubectl set image deployment/staging-${K8S_DEPLOYMENT_NAME} staging-${K8S_DEPLOYMENT_NAME}=${GCR_IMAGE}:latest --namespace=${K8S_NAMESPACE}"
-  } else if (environment == 'prod') {
-    sh "kubectl set image deployment/prod-${K8S_DEPLOYMENT_NAME} prod-${K8S_DEPLOYMENT_NAME}=${GCR_IMAGE}:prod --namespace=${K8S_NAMESPACE}"
-  }
-  sh "kubectl rollout status deployment/${environment}-${K8S_DEPLOYMENT_NAME} --namespace=${K8S_NAMESPACE}"
+// Update Kubernetes manifests for ArgoCD and push to Git
+def updateKubernetesManifests() {
+  sh '''
+    sed -i 's|image: gcr.io/your-project-id/devops-pipeline-demo:.*|image: ${GCR_IMAGE}:latest|' k8s/deployment.yaml
+    git config user.email "jenkins@example.com"
+    git config user.name "Jenkins CI"
+    git add k8s/deployment.yaml
+    git commit -m "Update Kubernetes manifests for ArgoCD with new Docker image"
+    git push origin main
+  '''
+  // ArgoCD will monitor the Git repository and apply changes automatically.
 }
 
 def runLoadTest() {
@@ -209,11 +218,20 @@ def runLoadTest() {
 def promoteToProduction() {
   docker.image("${GCR_IMAGE}:latest").tag('prod')
   docker.image("${GCR_IMAGE}:prod").push()
+  // Update Kubernetes manifests with production image and push to Git
+  sh '''
+    sed -i 's|image: gcr.io/your-project-id/devops-pipeline-demo:.*|image: ${GCR_IMAGE}:prod|' k8s/deployment.yaml
+    git config user.email "jenkins@example.com"
+    git config user.name "Jenkins CI"
+    git add k8s/deployment.yaml
+    git commit -m "Promote Docker image to production via ArgoCD"
+    git push origin main
+  '''
+  // ArgoCD will sync this change and apply it to the production cluster.
 }
 
 def cleanup() {
   sh 'docker system prune -f'
-  sh 'kubectl delete deployment -n ${K8S_NAMESPACE} staging-${K8S_DEPLOYMENT_NAME}'
 }
 
 def notify(status) {
