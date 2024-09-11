@@ -185,6 +185,60 @@ pipeline {
       }
     }
 
+    // GitOps Step: Update Kubernetes Manifests
+    stage('Update Kubernetes Manifests') {
+      steps {
+        script {
+          // Update the deployment manifest with the new image version
+          sh '''
+            sed -i 's|image: gcr.io/your-project-id/devops-pipeline-demo:.*|image: gcr.io/your-project-id/devops-pipeline-demo:latest|' k8s/deployment.yaml
+            git config user.email "jenkins@example.com"
+            git config user.name "Jenkins CI"
+            git add k8s/deployment.yaml
+            git commit -m "Update image to latest"
+            git push origin main
+          '''
+        }
+      }
+    }
+  }
+
+  stage('Run Load Test (K6)') {
+      when {
+        branch 'staging' // Run only on staging branch
+      }
+      steps {
+        script {
+          echo 'Running K6 load test...'
+          sh '''
+            docker run --rm -v ${WORKSPACE}/loadtest:/scripts loadimpact/k6 run /scripts/loadtest.js --out json=/scripts/loadtest-result.json
+          '''
+        }
+      }
+      post {
+        always {
+          script {
+            // Generate HTML report from the JSON output using K6 converter
+            sh '''
+              docker run --rm -v ${WORKSPACE}/loadtest:/scripts grafana/k6:latest run /scripts/loadtest.js --out json=/scripts/loadtest-result.json
+              docker run --rm -v ${WORKSPACE}/loadtest:/scripts loadimpact/k6 run /scripts/loadtest.js --out json=/scripts/loadtest-result.json
+              docker run --rm -v ${WORKSPACE}/loadtest:/scripts pikesley/k6-reporter k6-reporter /scripts/loadtest-result.json /scripts/loadtest-result.html
+            '''
+
+            // Archive the report in Jenkins
+            archiveArtifacts artifacts: 'loadtest/loadtest-result.html', allowEmptyArchive: false
+            publishHTML(target: [
+              allowMissing: false,
+              keepAll: true,
+              reportDir: 'loadtest',
+              reportFiles: 'loadtest-result.html',
+              reportName: 'K6 Load Test Report'
+            ])
+          }
+        }
+      }
+    }
+
     stage('Deploy to Staging (Dev)') {
       steps {
         script {

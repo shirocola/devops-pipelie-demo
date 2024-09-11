@@ -1,15 +1,31 @@
-import express from 'express';
+import express, { Application } from 'express';
 import productRoutes from './routes/product.routes';
+import { PrismaService } from './config/prisma';
 
-const app = express();
-app.use(express.json());
+class App {
+    public app: Application;
+    private prismaService: PrismaService;
 
-// Use the product routes with a base path
-app.use('/api/products', productRoutes);
+    constructor() {
+        this.app = express();
+        this.prismaService = new PrismaService();
+        this.initializeMiddlewares();
+        this.initializeRoutes();
+    }
 
-// Export app and server for testing purposes
-const server = app.listen(3000, () => {
-  console.log('Server is running on port 3000');
-});
+    private initializeMiddlewares() {
+        this.app.use(express.json());
+    }
 
-export { app, server };
+    private initializeRoutes() {
+        this.app.use('/products', productRoutes);
+    }
+
+    public listen(port: number) {
+        this.app.listen(port, () => {
+            console.log(`Server running on port ${port}`);
+        });
+    }
+}
+
+export default App;

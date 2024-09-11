@@ -1,5 +1,23 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient()
+export class PrismaService {
+    public prisma: PrismaClient;
 
-export default prisma
+    constructor() {
+        this.prisma = new PrismaClient();
+        this.connect();
+    }
+
+    private async connect() {
+        try {
+            await this.prisma.$connect();
+            console.log('Connected to the database');
+        } catch (error) {
+            console.error('Error connecting to the database', error);
+        }
+    }
+
+    async disconnect() {
+        await this.prisma.$disconnect();
+    }
+}

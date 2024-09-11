@@ -1,32 +1,26 @@
-import { PrismaClient } from '@prisma/client';
+import { ProductRepository } from '../repositories/product.repository';
+import { Product } from '../models/product.model';
 
 export class ProductService {
-  constructor(private prisma: PrismaClient) {}
+    constructor(private readonly productRepository: ProductRepository) {}
 
-  async getAllProducts() {
-    return await this.prisma.product.findMany();
-  }
+    getAllProducts(): Promise<Product[]> {
+        return this.productRepository.findAll();
+    }
 
-  async getProductById(id: number) {
-    return await this.prisma.product.findUnique({ where: { id } });
-  }
+    getProductById(id: number): Promise<Product | null> {
+        return this.productRepository.findById(id);
+    }
 
-  async createProduct(name: string, price: number) {
-    return await this.prisma.product.create({
-      data: { name, price },
-    });
-  }
+    createProduct(data: Product): Promise<Product> {
+        return this.productRepository.create(data);
+    }
 
-  async updateProduct(id: number, name: string, price: number) {
-    return await this.prisma.product.update({
-      where: { id },
-      data: { name, price },
-    });
-  }
+    updateProduct(id: number, data: Partial<Product>): Promise<Product> {
+        return this.productRepository.update(id, data);
+    }
 
-  async deleteProduct(id: number) {
-    return await this.prisma.product.delete({
-      where: { id },
-    });
-  }
+    deleteProduct(id: number): Promise<Product> {
+        return this.productRepository.delete(id);
+    }
 }

@@ -1,39 +1,32 @@
 import { Request, Response } from 'express';
 import { ProductService } from '../services/product.service';
-import { PrismaClient } from '@prisma/client';
+import { ProductRepository } from '../repositories/product.repository';
+
+const productService = new ProductService(new ProductRepository());
 
 export class ProductController {
-  private productService: ProductService;
+    async getAllProducts(req: Request, res: Response) {
+        const products = await productService.getAllProducts();
+        return res.json(products);
+    }
 
-  constructor(prisma: PrismaClient) {
-    // Inject PrismaClient and pass it to ProductService
-    this.productService = new ProductService(prisma);
-  }
+    async getProductById(req: Request, res: Response) {
+        const product = await productService.getProductById(Number(req.params.id));
+        return res.json(product);
+    }
 
-  async getAllProducts(req: Request, res: Response) {
-    const products = await this.productService.getAllProducts();
-    res.json(products);
-  }
+    async createProduct(req: Request, res: Response) {
+        const product = await productService.createProduct(req.body);
+        return res.json(product);
+    }
 
-  async getProductById(req: Request, res: Response) {
-    const product = await this.productService.getProductById(+req.params.id);
-    res.json(product);
-  }
+    async updateProduct(req: Request, res: Response) {
+        const product = await productService.updateProduct(Number(req.params.id), req.body);
+        return res.json(product);
+    }
 
-  async createProduct(req: Request, res: Response) {
-    const { name, price } = req.body;
-    const newProduct = await this.productService.createProduct(name, price);
-    res.status(201).json(newProduct);
-  }
-
-  async updateProduct(req: Request, res: Response) {
-    const { name, price } = req.body;
-    const updatedProduct = await this.productService.updateProduct(+req.params.id, name, price);
-    res.json(updatedProduct);
-  }
-
-  async deleteProduct(req: Request, res: Response) {
-    await this.productService.deleteProduct(+req.params.id);
-    res.status(204).send();
-  }
+    async deleteProduct(req: Request, res: Response) {
+        const product = await productService.deleteProduct(Number(req.params.id));
+        return res.json(product);
+    }
 }
