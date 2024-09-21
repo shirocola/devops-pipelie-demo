@@ -7,7 +7,7 @@ metadata:
 spec:
   type: service
   lifecycle: production
-  owner: your-team-name
+  owner: Developer Teams
   links:
     - url: https://github.com/shirocola/devops-pipeline-demo
       title: GitHub Repository
