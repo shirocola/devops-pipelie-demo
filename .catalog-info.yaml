@@ -1,0 +1,13 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: devops-pipeline-demo
+  description: A demo project for DevOps pipeline
+  owner: team-name
+spec:
+  type: service
+  lifecycle: production
+  owner: your-team-name
+  links:
+    - url: https://github.com/shirocola/devops-pipeline-demo
+      title: GitHub Repository
