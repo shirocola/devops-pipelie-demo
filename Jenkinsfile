@@ -10,6 +10,9 @@ pipeline {
     VAULT_ADDR = 'http://127.0.0.1:8200'
     VAULT_TOKEN = credentials('vault-token')
     ADMIN_PASSWORD = credentials('grafana-admin-password')
+    HECKMARX_CREDENTIALS = credentials('checkmarx-credentials')
+    SONARQUBE_TOKEN = credentials('sonarqube-token')
+    SONARQUBE_URL = 'http://your-sonarqube-instance'
   }
 
   stages {
@@ -53,6 +56,16 @@ pipeline {
             lintCode()
           }
         }
+        stage('SonarQube Analysis') {
+          steps {
+            runSonarQubeScan()
+          }
+        }
+        stage('Checkmarx Scan') {
+          steps {
+            runCheckmarxScan()
+          }
+        }    
         stage('Security Scan') {
           steps {
             runSecurityScan()
@@ -165,6 +178,26 @@ def runAnsiblePlaybook() {
 def lintCode() {
   sh 'npm install'
   sh 'npm run lint'
+}
+
+def runSonarQubeScan() {
+  withSonarQubeEnv('SonarQube') {
+    sh 'sonar-scanner \
+        -Dsonar.projectKey=devops-pipeline-demo \
+        -Dsonar.sources=. \
+        -Dsonar.host.url=${SONARQUBE_URL} \
+        -Dsonar.login=${SONARQUBE_TOKEN}'
+  }
+}
+
+// Checkmarx Scan
+def runCheckmarxScan() {
+  withCredentials([usernamePassword(credentialsId: 'checkmarx-credentials', usernameVariable: 'CHECKMARX_USER', passwordVariable: 'CHECKMARX_PASS')]) {
+    sh '''
+    checkmarx-scan --project-name "devops-pipeline-demo" --username ${CHECKMARX_USER} --password ${CHECKMARX_PASS} --server http://your-checkmarx-server \
+      --scan-mode full --preset "Default"
+    '''
+  }
 }
 
 def runSecurityScan() {

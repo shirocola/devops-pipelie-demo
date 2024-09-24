@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: devops-pipeline-demo-dev-ingress
+  labels:
+    app: devops-pipeline-demo
+    environment: dev
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"  # Disable SSL redirection for development
+    nginx.ingress.kubernetes.io/proxy-body-size: 100m  # Optional: Allow larger payloads (customizable)
+spec:
+  rules:
+    - host: dev.yourdomain.com  # Use your development subdomain
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: devops-pipeline-demo-dev-service  # Link to your service
+                port:
+                  number: 80
+  # Optional TLS configuration for HTTPS, leave commented for HTTP only
+  # tls:
+  #   - hosts:
+  #       - dev.yourdomain.com
+  #     secretName: your-tls-secret  # Pre-configured TLS secret

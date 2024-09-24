@@ -29,7 +29,7 @@ COPY --from=build /app/package.json /app/package-lock.json ./
 COPY --from=build /app/node_modules ./node_modules
 
 # Expose the port
-EXPOSE 3001
+EXPOSE 3000
 
 # Command to run tests
 CMD ["npm", "test"]
